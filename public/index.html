@@ -1,0 +1,101 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width" />
+    <title>Список пользователей</title>
+    <link href="https://maxcdn.bootstrapcdn.com/bootstrap/3.3.7/css/bootstrap.min.css" rel="stylesheet" />
+    <script src="https://cdn.jsdelivr.net/npm/vue@2.7.8/dist/vue.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios@1.1.2/dist/axios.min.js"></script>
+</head>
+
+<body>
+    <div class="container" id="app">
+        <h1>{{message}}</h1>
+        <h2>Список пользователей</h2>
+        <form name="userForm">
+            <div class="form-group">
+                <label for="name">Имя:</label>
+                <input type="text" v-model="user.name" class="form-control" />
+            </div>
+            <div class="form-group">
+                <label for="age">Возраст:</label>
+                <input type="number" v-model="user.age" class="form-control" />
+            </div>
+            <div class="panel-body">
+                <input type="button" @click="save()" class="btn btn-sm btn-primary" value="Сохранить">
+                <a @click="clear()" class="btn btn-sm btn-primary">Сбросить</a>
+            </div>
+        </form>
+        <table class="table table-condensed table-striped table-bordered">
+            <thead>
+                <tr>
+                    <th>Id</th>
+                    <th>Имя</th>
+                    <th>возраст</th>
+                    <th></th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr v-for="user, index in users" :key="user.id">
+                    <td>{{user.id}}</td>
+                    <td>{{user.name}}</td>
+                    <td>{{user.age}}</td>
+                    <td>
+                        <a @click="editUser(index)" style="cursor:pointer;padding:15px;">Изменить</a>
+                        <a @click="deleteUser(user.id)" style="cursor:pointer;padding:15px;">Удалить</a>
+                    </td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+    <script>
+        var app = new Vue({
+            el: '#app',
+            data: {
+                message: 'Привет, Vue!',
+                users: [],
+                user: {
+                    id: null,
+                    name: '',
+                    age: 0
+                }
+            },
+            methods: {
+                save() {
+                    if (this.user.id > 0) {
+                        axios.put('/api/users/', this.user).then(response => {
+                            this.clear()
+                        })
+                    }
+                    else {
+                        axios.post('/api/users/', this.user).then(response => {
+                            this.users.push(response.data);
+                            this.clear()
+                        })
+                    }
+                },
+                deleteUser(id) {
+                    axios.delete('/api/users/' + id).then(response => {
+                        var index = response.data.id;
+                        this.users.splice(index, 1);
+                    })
+                },
+                editUser(index) {
+                    this.user = this.users[index]
+                },
+                clear() {
+                    this.user = {id: null, name: '', age: 0}
+                }
+            },
+            created() {
+                axios.get('/api/users').then(response => {
+                    this.users = response.data
+                })
+            }
+        })
+    </script>
+</body>
+
+</html>
